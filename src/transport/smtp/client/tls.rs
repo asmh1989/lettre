@@ -49,6 +49,7 @@ pub struct TlsParametersBuilder {
     root_certs: Vec<Certificate>,
     accept_invalid_hostnames: bool,
     accept_invalid_certs: bool,
+    min_protocol_version: Protocol,
 }
 
 impl TlsParametersBuilder {
@@ -59,6 +60,7 @@ impl TlsParametersBuilder {
             root_certs: Vec::new(),
             accept_invalid_hostnames: false,
             accept_invalid_certs: false,
+            min_protocol_version: DEFAULT_TLS_MIN_PROTOCOL,
         }
     }
 
@@ -67,6 +69,12 @@ impl TlsParametersBuilder {
     /// Can be used to safely connect to a server using a self signed certificate, for example.
     pub fn add_root_certificate(mut self, cert: Certificate) -> Self {
         self.root_certs.push(cert);
+        self
+    }
+
+    /// Change DEFAULT_TLS_MIN_PROTOCOL
+    pub fn min_protocol_version(mut self, protocol: Protocol) -> Self {
+        self.min_protocol_version = protocol;
         self
     }
 
@@ -141,7 +149,7 @@ impl TlsParametersBuilder {
         tls_builder.danger_accept_invalid_hostnames(self.accept_invalid_hostnames);
         tls_builder.danger_accept_invalid_certs(self.accept_invalid_certs);
 
-        tls_builder.min_protocol_version(Some(DEFAULT_TLS_MIN_PROTOCOL));
+        tls_builder.min_protocol_version(Some(self.min_protocol_version));
         let connector = tls_builder.build()?;
         Ok(TlsParameters {
             connector: InnerTlsParameters::NativeTls(connector),
